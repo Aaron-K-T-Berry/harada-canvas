@@ -19,9 +19,11 @@ interface AppProps {
 function AppRoutes({
   onboardingSeen,
   onCreateSquare,
+  onMarkOnboardingSeen,
 }: {
   onboardingSeen: boolean;
   onCreateSquare: () => string;
+  onMarkOnboardingSeen: () => void;
 }) {
   const navigate = useNavigate();
 
@@ -33,6 +35,7 @@ function AppRoutes({
           element={
             <DashboardPage
               onboardingSeen={onboardingSeen}
+              onMarkOnboardingSeen={onMarkOnboardingSeen}
               onCreateSquare={() => {
                 const id = onCreateSquare();
                 navigate(`/square/${id}`);
@@ -55,9 +58,8 @@ export default function App({ repository = createLocalStorageRepository() }: App
       : createEmptyAppData().preferences,
   );
 
-  const handleThemeChange = useCallback(
-    (theme: ThemePreference) => {
-      const next = { ...preferences, theme };
+  const persistPreferences = useCallback(
+    (next: typeof preferences) => {
       setPreferences(next);
       try {
         repository.setPreferences(next);
@@ -65,26 +67,31 @@ export default function App({ repository = createLocalStorageRepository() }: App
         // Invalid or missing storage will be surfaced by recovery flows later.
       }
     },
-    [preferences, repository],
+    [repository],
   );
+
+  const handleThemeChange = useCallback(
+    (theme: ThemePreference) => {
+      persistPreferences({ ...preferences, theme });
+    },
+    [persistPreferences, preferences],
+  );
+
+  const handleMarkOnboardingSeen = useCallback(() => {
+    if (preferences.onboardingSeen) {
+      return;
+    }
+    persistPreferences({ ...preferences, onboardingSeen: true });
+  }, [persistPreferences, preferences]);
 
   const handleCreateSquare = useCallback(() => {
     const square = createStandardSquare();
     repository.saveSquare(square);
-    setPreferences((current) => {
-      if (current.onboardingSeen) {
-        return current;
-      }
-      const next = { ...current, onboardingSeen: true };
-      try {
-        repository.setPreferences(next);
-      } catch {
-        // Ignore preference write failures during create.
-      }
-      return next;
-    });
+    if (!preferences.onboardingSeen) {
+      persistPreferences({ ...preferences, onboardingSeen: true });
+    }
     return square.id;
-  }, [repository]);
+  }, [persistPreferences, preferences, repository]);
 
   return (
     <ErrorBoundary>
@@ -94,6 +101,7 @@ export default function App({ repository = createLocalStorageRepository() }: App
             <AppRoutes
               onboardingSeen={preferences.onboardingSeen}
               onCreateSquare={handleCreateSquare}
+              onMarkOnboardingSeen={handleMarkOnboardingSeen}
             />
           </HashRouter>
         </ThemeProvider>
