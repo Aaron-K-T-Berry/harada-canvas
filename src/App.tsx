@@ -5,10 +5,11 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DashboardPage } from "@/features/dashboard/dashboard-page";
 import { EditorPage } from "@/features/editor/editor-page";
+import { StorageRecovery } from "@/features/import-export/storage-recovery";
 import { createLocalStorageRepository } from "@/lib/storage/local-storage-repository";
 import type { SquareRepository } from "@/lib/storage/repository";
 import { RepositoryProvider } from "@/lib/storage/repository-context";
-import type { ThemePreference } from "@/models/app-data";
+import type { AppPreferences, ThemePreference } from "@/models/app-data";
 import { createEmptyAppData } from "@/models/app-data";
 import { createStandardSquare } from "@/models/harada-square";
 
@@ -20,10 +21,12 @@ function AppRoutes({
   onboardingSeen,
   onCreateSquare,
   onMarkOnboardingSeen,
+  onPreferencesChanged,
 }: {
   onboardingSeen: boolean;
   onCreateSquare: () => string;
   onMarkOnboardingSeen: () => void;
+  onPreferencesChanged: (preferences: AppPreferences) => void;
 }) {
   const navigate = useNavigate();
 
@@ -36,6 +39,7 @@ function AppRoutes({
             <DashboardPage
               onboardingSeen={onboardingSeen}
               onMarkOnboardingSeen={onMarkOnboardingSeen}
+              onPreferencesChanged={onPreferencesChanged}
               onCreateSquare={() => {
                 const id = onCreateSquare();
                 navigate(`/square/${id}`);
@@ -52,6 +56,12 @@ function AppRoutes({
 
 export default function App({ repository = createLocalStorageRepository() }: AppProps) {
   const initialRead = useMemo(() => repository.read(), [repository]);
+  const [storageIssue, setStorageIssue] = useState<{ reason: string; raw: string | null } | null>(
+    () =>
+      initialRead.status === "invalid"
+        ? { reason: initialRead.reason, raw: initialRead.raw }
+        : null,
+  );
   const [preferences, setPreferences] = useState(() =>
     initialRead.status === "ok" || initialRead.status === "empty"
       ? initialRead.data.preferences
@@ -59,12 +69,12 @@ export default function App({ repository = createLocalStorageRepository() }: App
   );
 
   const persistPreferences = useCallback(
-    (next: typeof preferences) => {
+    (next: AppPreferences) => {
       setPreferences(next);
       try {
         repository.setPreferences(next);
       } catch {
-        // Invalid or missing storage will be surfaced by recovery flows later.
+        // Invalid storage is handled by the recovery screen.
       }
     },
     [repository],
@@ -84,6 +94,10 @@ export default function App({ repository = createLocalStorageRepository() }: App
     persistPreferences({ ...preferences, onboardingSeen: true });
   }, [persistPreferences, preferences]);
 
+  const handlePreferencesChanged = useCallback((next: AppPreferences) => {
+    setPreferences(next);
+  }, []);
+
   const handleCreateSquare = useCallback(() => {
     const square = createStandardSquare();
     repository.saveSquare(square);
@@ -93,18 +107,33 @@ export default function App({ repository = createLocalStorageRepository() }: App
     return square.id;
   }, [persistPreferences, preferences, repository]);
 
+  const handleRecovered = useCallback((next: AppPreferences) => {
+    setPreferences(next);
+    setStorageIssue(null);
+  }, []);
+
   return (
     <ErrorBoundary>
       <RepositoryProvider repository={repository}>
-        <ThemeProvider initialTheme={preferences.theme} onThemeChange={handleThemeChange}>
-          <HashRouter>
-            <AppRoutes
-              onboardingSeen={preferences.onboardingSeen}
-              onCreateSquare={handleCreateSquare}
-              onMarkOnboardingSeen={handleMarkOnboardingSeen}
-            />
-          </HashRouter>
-        </ThemeProvider>
+        {storageIssue ? (
+          <StorageRecovery
+            repository={repository}
+            reason={storageIssue.reason}
+            raw={storageIssue.raw}
+            onRecovered={handleRecovered}
+          />
+        ) : (
+          <ThemeProvider initialTheme={preferences.theme} onThemeChange={handleThemeChange}>
+            <HashRouter>
+              <AppRoutes
+                onboardingSeen={preferences.onboardingSeen}
+                onCreateSquare={handleCreateSquare}
+                onMarkOnboardingSeen={handleMarkOnboardingSeen}
+                onPreferencesChanged={handlePreferencesChanged}
+              />
+            </HashRouter>
+          </ThemeProvider>
+        )}
       </RepositoryProvider>
     </ErrorBoundary>
   );

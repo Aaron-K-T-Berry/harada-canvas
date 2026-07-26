@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EditorToolbar } from "@/features/editor/editor-toolbar";
 import { HaradaGrid } from "@/features/editor/harada-grid";
 import { useEditorSession } from "@/features/editor/use-editor-session";
+import { downloadTextFile } from "@/lib/download";
+import { markdownFilename, squareToMarkdown } from "@/lib/markdown/export-markdown";
 import { useRepository } from "@/lib/storage/repository-context";
 
 export function EditorPage() {
@@ -13,6 +15,7 @@ export function EditorPage() {
   const flushRef = useRef(editor.flushPendingSave);
   const undoRef = useRef(editor.undo);
   const redoRef = useRef(editor.redo);
+  const [exportAnnouncement, setExportAnnouncement] = useState("");
 
   useEffect(() => {
     flushRef.current = editor.flushPendingSave;
@@ -83,6 +86,16 @@ export function EditorPage() {
 
   const square = editor.square;
 
+  const handleExportMarkdown = () => {
+    editor.flushPendingSave();
+    downloadTextFile(
+      markdownFilename(square),
+      squareToMarkdown(square),
+      "text/markdown;charset=utf-8",
+    );
+    setExportAnnouncement("Downloaded a Markdown export of this square.");
+  };
+
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -109,14 +122,17 @@ export function EditorPage() {
       <EditorToolbar
         canUndo={editor.canUndo}
         canRedo={editor.canRedo}
+        canExportMarkdown
         onUndo={editor.undo}
         onRedo={editor.redo}
+        onExportMarkdown={handleExportMarkdown}
       />
 
       <HaradaGrid square={square} onChangeCell={editor.setCellValue} />
 
       <div className="space-y-1 text-sm" aria-live="polite">
         {editor.announcement ? <p>{editor.announcement}</p> : null}
+        {exportAnnouncement ? <p>{exportAnnouncement}</p> : null}
         {editor.saveError ? <p className="text-destructive">{editor.saveError}</p> : null}
         {editor.isExample ? (
           <p className="text-muted-foreground">

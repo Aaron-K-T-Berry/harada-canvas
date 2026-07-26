@@ -22,13 +22,16 @@ import {
 import { OnboardingPanel } from "@/features/dashboard/onboarding-panel";
 import { RenameSquareDialog } from "@/features/dashboard/rename-square-dialog";
 import { SquareList } from "@/features/dashboard/square-list";
+import { BackupControls } from "@/features/import-export/backup-controls";
 import { useRepository } from "@/lib/storage/repository-context";
+import type { AppPreferences } from "@/models/app-data";
 import type { HaradaSquare } from "@/models/harada-square";
 
 interface DashboardPageProps {
   onboardingSeen: boolean;
   onCreateSquare: () => void;
   onMarkOnboardingSeen: () => void;
+  onPreferencesChanged: (preferences: AppPreferences) => void;
 }
 
 const SORT_OPTIONS: Array<{ value: SquareSortOption; label: string }> = [
@@ -44,6 +47,7 @@ export function DashboardPage({
   onboardingSeen,
   onCreateSquare,
   onMarkOnboardingSeen,
+  onPreferencesChanged,
 }: DashboardPageProps) {
   const repository = useRepository();
   const searchId = useId();
@@ -179,6 +183,17 @@ export function DashboardPage({
           onDelete={setDeleting}
         />
       </section>
+
+      <BackupControls
+        repository={repository}
+        onAnnounce={setAnnouncement}
+        onDataChanged={(preferences) => {
+          refreshSquares();
+          if (preferences) {
+            onPreferencesChanged(preferences);
+          }
+        }}
+      />
 
       <div className="text-sm" aria-live="polite">
         {announcement ? <p>{announcement}</p> : null}

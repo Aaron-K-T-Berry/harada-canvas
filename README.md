@@ -4,7 +4,7 @@ Harada Canvas is an open-source web app for building and managing [Harada Square
 
 ## Status
 
-Square management milestone: create, open, rename, duplicate, delete, search, sort, and first-visit onboarding are available on the dashboard. Import/export and deployment polish land next.
+Portability milestone: Markdown export, versioned JSON backup import/export, and local-storage recovery guidance are available. Accessibility polish and GitHub Pages deployment land next.
 
 ## Privacy
 
