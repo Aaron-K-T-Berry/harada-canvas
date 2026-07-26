@@ -4,7 +4,7 @@ Harada Canvas is an open-source web app for building and managing [Harada Square
 
 ## Status
 
-Accessibility and responsive polish: skip links, live regions, contrast tweaks, reduced-motion support, and a simplified mobile viewing mode are in place. GitHub Pages deployment lands next.
+v1 is complete: editor, dashboard, portability, accessibility polish, and GitHub Pages deploy workflows are in place.
 
 ## Privacy
 
@@ -68,12 +68,36 @@ VITE_BASE_PATH=/harada-canvas/pr-12/ pnpm build
 
 Hash routing (`#/`, `#/square/:id`) keeps deep links working under GitHub Pages base paths without server rewrites.
 
+## Deployment
+
+Production and pull-request previews are published from the `gh-pages` branch.
+
+| Surface | Trigger | URL shape |
+| --- | --- | --- |
+| Production | Push to `master` | `https://<owner>.github.io/harada-canvas/` |
+| PR preview | Open/sync PR (same-repo only) | `https://<owner>.github.io/harada-canvas/pr-preview/pr-<n>/` |
+
+Preview directories are removed when the pull request closes. Fork pull requests still get CI checks, but they do not receive write-capable preview deploys.
+
+### One-time repository setup
+
+1. Under **Settings → Pages**, set source to **Deploy from a branch**, branch `gh-pages`, folder `/ (root)`.
+2. Under **Settings → Actions → General → Workflow permissions**, choose **Read and write permissions** so production and preview workflows can update `gh-pages`.
+3. Push to `master` (or merge a PR) to create the first production deploy.
+
+Workflows:
+
+- `.github/workflows/ci.yml` — typecheck, Biome, tests, and build on pull requests and `master`
+- `.github/workflows/deploy.yml` — verify, then publish production to `gh-pages` (keeps `pr-preview/`)
+- `.github/workflows/pr-preview.yml` — isolated preview build + cleanup via [`rossjrw/pr-preview-action`](https://github.com/rossjrw/pr-preview-action)
+
 ## Contributing
 
 1. Create a branch from `master`.
 2. Make focused changes with tests for domain and storage behavior.
 3. Run `pnpm check`, `pnpm typecheck`, `pnpm test`, and `pnpm build` before opening a pull request.
-4. Keep square contents offline; do not add networked persistence.
+4. Same-repo pull requests get an automatic Pages preview comment; fork PRs rely on CI only.
+5. Keep square contents offline; do not add networked persistence.
 
 ## License
 
