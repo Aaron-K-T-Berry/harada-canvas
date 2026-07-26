@@ -59,8 +59,7 @@ describe("accessibility and responsive polish", () => {
     repository.setPreferences({ theme: "light", onboardingSeen: true });
     render(<App repository={repository} />);
 
-    const skip = screen.getByRole("link", { name: "Skip to main content" });
-    expect(skip).toHaveAttribute("href", "#main-content");
+    const skip = screen.getByRole("button", { name: "Skip to main content" });
     await user.click(skip);
     expect(document.getElementById("main-content")).toHaveFocus();
     expect(window.location.hash).toBe("#/");

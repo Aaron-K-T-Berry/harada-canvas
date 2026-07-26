@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { LiveRegion } from "@/components/live-region";
 import { Button } from "@/components/ui/button";
 import { EditorToolbar } from "@/features/editor/editor-toolbar";
 import { HaradaGrid } from "@/features/editor/harada-grid";
@@ -107,9 +106,6 @@ export function EditorPage() {
   }
 
   const square = editor.square;
-  const liveMessage = [editor.announcement, exportAnnouncement, editor.saveError]
-    .filter(Boolean)
-    .join(" ");
 
   const handleExportMarkdown = () => {
     editor.flushPendingSave();
@@ -182,7 +178,11 @@ export function EditorPage() {
         compact={compact}
       />
 
-      <div className="space-y-1 text-sm" aria-live="polite">
+      <div
+        className="space-y-1 text-sm"
+        aria-live={editor.saveError ? "assertive" : "polite"}
+        aria-atomic="true"
+      >
         {editor.announcement ? <p>{editor.announcement}</p> : null}
         {exportAnnouncement ? <p>{exportAnnouncement}</p> : null}
         {editor.saveError ? <p className="text-destructive">{editor.saveError}</p> : null}
@@ -192,7 +192,6 @@ export function EditorPage() {
           </p>
         ) : null}
       </div>
-      <LiveRegion message={liveMessage} politeness={editor.saveError ? "assertive" : "polite"} />
     </main>
   );
 }

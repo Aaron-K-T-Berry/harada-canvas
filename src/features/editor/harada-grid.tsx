@@ -261,7 +261,7 @@ export function HaradaGrid({
                 onDoubleClick={() => beginEdit(rowIndex, columnIndex)}
                 onKeyDown={(event) => handleCellKeyDown(event, rowIndex, columnIndex)}
                 className={cn(
-                  "flex w-full items-center justify-center whitespace-pre-wrap break-words p-2 text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                  "flex w-full items-center justify-center whitespace-pre-wrap break-words p-2 text-center text-sm transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                   compact ? "min-h-12 text-xs" : "min-h-16",
                   borderClasses,
                   !value && structuralRole === "action" && "text-muted-foreground",

@@ -9,7 +9,7 @@ export function SkipLink() {
           return;
         }
         main.focus();
-        main.scrollIntoView();
+        main.scrollIntoView?.();
       }}
     >
       Skip to main content
