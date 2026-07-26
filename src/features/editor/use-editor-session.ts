@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { renameSquare } from "@/features/dashboard/domain/square-list";
 import { createExampleSquare, isExampleSquareId } from "@/features/editor/domain/example-square";
 import { updateCell } from "@/features/editor/domain/grid-ops";
 import {
@@ -149,6 +150,30 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
     }
   };
 
+  const renameTitle = (title: string) => {
+    const current = squareRef.current;
+    if (!current) {
+      return;
+    }
+
+    const next = renameSquare(current, title);
+    if (!next) {
+      setAnnouncement("Enter a title before saving.");
+      return;
+    }
+
+    if (next === current) {
+      return;
+    }
+
+    setSquare(next);
+    setAnnouncement(`Renamed to “${next.title}”.`);
+    setSaveError(null);
+    if (statusRef.current === "ready") {
+      scheduleSave(next);
+    }
+  };
+
   const handleUndo = () => {
     const currentSquare = squareRef.current;
     const currentHistory = historyRef.current;
@@ -201,6 +226,7 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
     canUndo: history ? canUndo(history) : false,
     canRedo: history ? canRedo(history) : false,
     setCellValue,
+    renameTitle,
     undo: handleUndo,
     redo: handleRedo,
     flushPendingSave,

@@ -1,4 +1,4 @@
-import { Download, Redo2, Undo2 } from "lucide-react";
+import { Download, Pencil, Redo2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EditorToolbarProps {
@@ -7,6 +7,8 @@ interface EditorToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   onExportMarkdown?: () => void;
+  onRename?: () => void;
+  renameLabel?: string;
 }
 
 export function EditorToolbar({
@@ -15,6 +17,8 @@ export function EditorToolbar({
   onUndo,
   onRedo,
   onExportMarkdown,
+  onRename,
+  renameLabel,
 }: EditorToolbarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2" role="toolbar" aria-label="Editor controls">
@@ -44,6 +48,18 @@ export function EditorToolbar({
         <Button type="button" variant="outline" size="sm" onClick={onExportMarkdown}>
           <Download />
           Export Markdown
+        </Button>
+      ) : null}
+      {onRename ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onRename}
+          aria-label={renameLabel}
+        >
+          <Pencil />
+          Rename
         </Button>
       ) : null}
     </div>

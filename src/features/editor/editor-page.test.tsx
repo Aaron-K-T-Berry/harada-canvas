@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import App from "@/App";
@@ -102,6 +102,28 @@ describe("editor workflows", () => {
     await user.keyboard("{ArrowRight}");
 
     expect(getCell(/Row 1, column 2: empty/i)).toHaveFocus();
+  });
+
+  it("renames the square from the editor and autosaves the title", async () => {
+    const user = userEvent.setup();
+    const repository = createLocalStorageRepository(createMemoryStorage());
+    repository.saveSquare(createStandardSquare({ id: "rename-me", title: "Testing 123" }));
+
+    window.location.hash = "#/square/rename-me";
+    render(<App repository={repository} />);
+
+    expect(await screen.findByRole("heading", { name: "Testing 123" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Rename Testing 123" }));
+
+    const dialog = screen.getByRole("dialog");
+    const titleInput = within(dialog).getByLabelText("Title");
+    await user.clear(titleInput);
+    await user.type(titleInput, "Renamed in editor");
+    await user.click(within(dialog).getByRole("button", { name: "Save title" }));
+
+    expect(screen.getByRole("heading", { name: "Renamed in editor" })).toBeInTheDocument();
+    await flushAutosave();
+    expect(repository.getSquare("rename-me")?.title).toBe("Renamed in editor");
   });
 
   it("keeps example square edits out of storage", async () => {

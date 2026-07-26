@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { RenameSquareDialog } from "@/features/dashboard/rename-square-dialog";
 import { EditorToolbar } from "@/features/editor/editor-toolbar";
 import { HaradaGrid } from "@/features/editor/harada-grid";
 import { MobileEditorBanner } from "@/features/editor/mobile-editor-banner";
@@ -16,12 +17,14 @@ export function EditorPage() {
   const editor = useEditorSession(squareId, repository);
   const isCompact = useIsCompactViewport();
   const [mobileEditingEnabled, setMobileEditingEnabled] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const undoRef = useRef(editor.undo);
   const redoRef = useRef(editor.redo);
   const [exportAnnouncement, setExportAnnouncement] = useState("");
 
   const readOnly = isCompact && !mobileEditingEnabled;
   const compact = isCompact;
+  const canRename = !readOnly && !editor.isExample;
 
   useEffect(() => {
     undoRef.current = editor.undo;
@@ -153,6 +156,8 @@ export function EditorPage() {
           onUndo={editor.undo}
           onRedo={editor.redo}
           onExportMarkdown={handleExportMarkdown}
+          onRename={canRename ? () => setRenameOpen(true) : undefined}
+          renameLabel={canRename ? `Rename ${square.title}` : undefined}
         />
       ) : (
         <div className="flex flex-wrap gap-2">
@@ -183,6 +188,13 @@ export function EditorPage() {
           </p>
         ) : null}
       </div>
+
+      <RenameSquareDialog
+        open={renameOpen}
+        initialTitle={square.title}
+        onOpenChange={setRenameOpen}
+        onRename={editor.renameTitle}
+      />
     </main>
   );
 }
