@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 
 interface DashboardPageProps {
   onboardingSeen: boolean;
+  onCreateSquare: () => void;
 }
 
-export function DashboardPage({ onboardingSeen }: DashboardPageProps) {
+export function DashboardPage({ onboardingSeen, onCreateSquare }: DashboardPageProps) {
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex flex-col gap-2">
@@ -26,8 +27,11 @@ export function DashboardPage({ onboardingSeen }: DashboardPageProps) {
             daily practices on a 9×9 grid. Start from the standard template, then reshape the grid
             when your planning process needs it.
           </p>
-          <div className="mt-4">
-            <Button asChild>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button type="button" onClick={onCreateSquare}>
+              Create your first square
+            </Button>
+            <Button asChild variant="outline">
               <Link to="/square/example">View example square</Link>
             </Button>
           </div>
@@ -37,13 +41,13 @@ export function DashboardPage({ onboardingSeen }: DashboardPageProps) {
       <section aria-label="Saved squares" className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-medium">Saved squares</h2>
-          <Button type="button" disabled>
+          <Button type="button" onClick={onCreateSquare}>
             Create square
           </Button>
         </div>
         <p className="text-sm text-muted-foreground">
-          Square management arrives in the next milestone. Your data model and local storage layer
-          are ready.
+          Full rename, duplicate, delete, search, and sort controls arrive in the next milestone.
+          Created squares open in the editor and autosave in this browser.
         </p>
       </section>
     </main>

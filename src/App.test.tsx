@@ -49,9 +49,8 @@ describe("App shell", () => {
     await user.click(screen.getByRole("link", { name: "View example square" }));
 
     expect(screen.getByRole("heading", { name: "Example square" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/Example Harada Square showing a nine by nine grid/i),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("grid")).toBeInTheDocument();
+    expect(screen.getByText(/edits stay in this session/i)).toBeInTheDocument();
   });
 
   it("skips the welcome panel once onboarding has been seen", () => {

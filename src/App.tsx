@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/app-shell";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,11 +7,44 @@ import { DashboardPage } from "@/features/dashboard/dashboard-page";
 import { EditorPage } from "@/features/editor/editor-page";
 import { createLocalStorageRepository } from "@/lib/storage/local-storage-repository";
 import type { SquareRepository } from "@/lib/storage/repository";
+import { RepositoryProvider } from "@/lib/storage/repository-context";
 import type { ThemePreference } from "@/models/app-data";
 import { createEmptyAppData } from "@/models/app-data";
+import { createStandardSquare } from "@/models/harada-square";
 
 interface AppProps {
   repository?: SquareRepository;
+}
+
+function AppRoutes({
+  onboardingSeen,
+  onCreateSquare,
+}: {
+  onboardingSeen: boolean;
+  onCreateSquare: () => string;
+}) {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route
+          index
+          element={
+            <DashboardPage
+              onboardingSeen={onboardingSeen}
+              onCreateSquare={() => {
+                const id = onCreateSquare();
+                navigate(`/square/${id}`);
+              }}
+            />
+          }
+        />
+        <Route path="square/:squareId" element={<EditorPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
+  );
 }
 
 export default function App({ repository = createLocalStorageRepository() }: AppProps) {
@@ -35,22 +68,36 @@ export default function App({ repository = createLocalStorageRepository() }: App
     [preferences, repository],
   );
 
+  const handleCreateSquare = useCallback(() => {
+    const square = createStandardSquare();
+    repository.saveSquare(square);
+    setPreferences((current) => {
+      if (current.onboardingSeen) {
+        return current;
+      }
+      const next = { ...current, onboardingSeen: true };
+      try {
+        repository.setPreferences(next);
+      } catch {
+        // Ignore preference write failures during create.
+      }
+      return next;
+    });
+    return square.id;
+  }, [repository]);
+
   return (
     <ErrorBoundary>
-      <ThemeProvider initialTheme={preferences.theme} onThemeChange={handleThemeChange}>
-        <HashRouter>
-          <Routes>
-            <Route element={<AppShell />}>
-              <Route
-                index
-                element={<DashboardPage onboardingSeen={preferences.onboardingSeen} />}
-              />
-              <Route path="square/:squareId" element={<EditorPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </HashRouter>
-      </ThemeProvider>
+      <RepositoryProvider repository={repository}>
+        <ThemeProvider initialTheme={preferences.theme} onThemeChange={handleThemeChange}>
+          <HashRouter>
+            <AppRoutes
+              onboardingSeen={preferences.onboardingSeen}
+              onCreateSquare={handleCreateSquare}
+            />
+          </HashRouter>
+        </ThemeProvider>
+      </RepositoryProvider>
     </ErrorBoundary>
   );
 }
