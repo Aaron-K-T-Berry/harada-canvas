@@ -35,8 +35,8 @@ describe("square list domain", () => {
   });
 
   it("queries with filter then sort", () => {
-    const result = querySquares([alpha, beta], "a", "name-desc");
-    expect(result.map((square) => square.id)).toEqual(["b", "a"]);
+    const result = querySquares([alpha, beta], "a", "name-asc");
+    expect(result.map((square) => square.id)).toEqual(["a", "b"]);
   });
 
   it("renames squares and rejects blank titles", () => {

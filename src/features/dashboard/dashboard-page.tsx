@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertDialog,
@@ -36,11 +36,7 @@ interface DashboardPageProps {
 
 const SORT_OPTIONS: Array<{ value: SquareSortOption; label: string }> = [
   { value: "updated-desc", label: "Last modified (newest)" },
-  { value: "updated-asc", label: "Last modified (oldest)" },
   { value: "name-asc", label: "Name (A–Z)" },
-  { value: "name-desc", label: "Name (Z–A)" },
-  { value: "created-desc", label: "Created (newest)" },
-  { value: "created-asc", label: "Created (oldest)" },
 ];
 
 export function DashboardPage({
@@ -73,7 +69,7 @@ export function DashboardPage({
     }
   };
 
-  const visibleSquares = useMemo(() => querySquares(squares, query, sort), [query, sort, squares]);
+  const visibleSquares = querySquares(squares, query, sort);
 
   const handleRename = (title: string) => {
     if (!renaming) {

@@ -64,16 +64,12 @@ describe("backup parsing and merge", () => {
     });
     const unique = createStandardSquare({ id: "square-2", title: "Unique" });
 
-    const merged = mergeBackupIntoAppData(
-      current,
-      {
-        version: APP_DATA_VERSION,
-        exportedAt: "2026-01-02T00:00:00.000Z",
-        squares: [incoming, unique],
-        preferences: { theme: "light", onboardingSeen: true },
-      },
-      { mergePreferences: false },
-    );
+    const merged = mergeBackupIntoAppData(current, {
+      version: APP_DATA_VERSION,
+      exportedAt: "2026-01-02T00:00:00.000Z",
+      squares: [incoming, unique],
+      preferences: { theme: "light", onboardingSeen: true },
+    });
 
     expect(merged.importedCount).toBe(2);
     expect(merged.conflictCount).toBe(1);

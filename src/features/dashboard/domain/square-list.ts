@@ -1,13 +1,7 @@
 import { cloneCells } from "@/features/editor/domain/grid-ops";
 import { createStandardSquare, type HaradaSquare } from "@/models/harada-square";
 
-export type SquareSortOption =
-  | "name-asc"
-  | "name-desc"
-  | "updated-desc"
-  | "updated-asc"
-  | "created-desc"
-  | "created-asc";
+export type SquareSortOption = "name-asc" | "updated-desc";
 
 export function filterSquaresByTitle(squares: HaradaSquare[], query: string): HaradaSquare[] {
   const normalized = query.trim().toLocaleLowerCase();
@@ -25,16 +19,8 @@ export function sortSquares(squares: HaradaSquare[], sort: SquareSortOption): Ha
     switch (sort) {
       case "name-asc":
         return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
-      case "name-desc":
-        return b.title.localeCompare(a.title, undefined, { sensitivity: "base" });
-      case "updated-asc":
-        return a.updatedAt.localeCompare(b.updatedAt);
       case "updated-desc":
         return b.updatedAt.localeCompare(a.updatedAt);
-      case "created-asc":
-        return a.createdAt.localeCompare(b.createdAt);
-      case "created-desc":
-        return b.createdAt.localeCompare(a.createdAt);
       default:
         return 0;
     }

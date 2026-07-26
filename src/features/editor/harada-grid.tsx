@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useCallback, useEffect, useId, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import { isBlockBoundary } from "@/features/editor/domain/grid-ops";
 import {
   cellGuidanceLabel,
@@ -56,25 +56,22 @@ export function HaradaGrid({
     inputRef.current?.select();
   }, [editing]);
 
-  const focusCell = useCallback((row: number, column: number) => {
+  const focusCell = (row: number, column: number) => {
     setFocused({ row, column });
     queueMicrotask(() => {
       cellRefs.current[row]?.[column]?.focus();
     });
-  }, []);
+  };
 
-  const beginEdit = useCallback(
-    (row: number, column: number) => {
-      if (readOnly) {
-        return;
-      }
-      setDraft(square.cells[row]?.[column] ?? "");
-      setEditing({ row, column });
-    },
-    [readOnly, square.cells],
-  );
+  const beginEdit = (row: number, column: number) => {
+    if (readOnly) {
+      return;
+    }
+    setDraft(square.cells[row]?.[column] ?? "");
+    setEditing({ row, column });
+  };
 
-  const commitEdit = useCallback(() => {
+  const commitEdit = () => {
     if (!editing) {
       return;
     }
@@ -82,17 +79,16 @@ export function HaradaGrid({
     const { row, column } = editing;
     setEditing(null);
     focusCell(row, column);
-  }, [draft, editing, focusCell, onChangeCell]);
+  };
 
-  const cancelEdit = useCallback(() => {
+  const cancelEdit = () => {
     if (!editing) {
       return;
     }
     const { row, column } = editing;
     setEditing(null);
     focusCell(row, column);
-  }, [editing, focusCell]);
-
+  };
   const handleCellKeyDown = (
     event: KeyboardEvent<HTMLButtonElement>,
     row: number,

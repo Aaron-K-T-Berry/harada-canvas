@@ -59,4 +59,18 @@ describe("editor history", () => {
     expect(next.past).toHaveLength(0);
     expect(next).toBe(history);
   });
+
+  it("drops the oldest past entry after 50 pushes", () => {
+    let history = createHistory(createSnapshot(1, 1, [["0"]]));
+    const firstPresent = history.present;
+
+    for (let i = 1; i <= 51; i += 1) {
+      history = pushHistory(history, createSnapshot(1, 1, [[String(i)]]));
+    }
+
+    expect(history.past).toHaveLength(50);
+    expect(history.past[0]).not.toBe(firstPresent);
+    expect(history.past[0]?.cells[0]?.[0]).toBe("1");
+    expect(history.present.cells[0]?.[0]).toBe("51");
+  });
 });

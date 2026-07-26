@@ -1,4 +1,4 @@
-import { createEmptyCells, type HaradaSquare } from "@/models/harada-square";
+import type { HaradaSquare } from "@/models/harada-square";
 
 export type GridMutationResult = { ok: true; square: HaradaSquare } | { ok: false; reason: string };
 
@@ -36,10 +36,6 @@ export function updateCell(
   targetRow[column] = value;
 
   return { ok: true, square: touch(square, { cells }) };
-}
-
-export function createBlankGrid(rows: number, columns: number): string[][] {
-  return createEmptyCells(rows, columns);
 }
 
 export function isBlockBoundary(index: number, blockSize = 3): boolean {

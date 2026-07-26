@@ -43,8 +43,11 @@ export function pushHistory(history: EditorHistory, next: EditorSnapshot): Edito
     return history;
   }
 
+  // ponytail: past capped at 50; raise or spill to disk if long sessions need deeper undo
+  const past = [...history.past, history.present].slice(-50);
+
   return {
-    past: [...history.past, history.present],
+    past,
     present: createSnapshot(next.rows, next.columns, next.cells),
     future: [],
   };

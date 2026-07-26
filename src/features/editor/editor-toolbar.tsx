@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 interface EditorToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
-  disabled?: boolean;
-  canExportMarkdown?: boolean;
   onUndo: () => void;
   onRedo: () => void;
   onExportMarkdown?: () => void;
@@ -14,8 +12,6 @@ interface EditorToolbarProps {
 export function EditorToolbar({
   canUndo,
   canRedo,
-  disabled = false,
-  canExportMarkdown = false,
   onUndo,
   onRedo,
   onExportMarkdown,
@@ -26,7 +22,7 @@ export function EditorToolbar({
         type="button"
         variant="outline"
         size="sm"
-        disabled={disabled || !canUndo}
+        disabled={!canUndo}
         onClick={onUndo}
         aria-keyshortcuts="Control+Z Meta+Z"
       >
@@ -37,7 +33,7 @@ export function EditorToolbar({
         type="button"
         variant="outline"
         size="sm"
-        disabled={disabled || !canRedo}
+        disabled={!canRedo}
         onClick={onRedo}
         aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y Meta+Y"
       >
@@ -45,13 +41,7 @@ export function EditorToolbar({
         Redo
       </Button>
       {onExportMarkdown ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled || !canExportMarkdown}
-          onClick={onExportMarkdown}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={onExportMarkdown}>
           <Download />
           Export Markdown
         </Button>

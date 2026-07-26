@@ -1,49 +1,18 @@
-import { isValidHaradaSquare, isValidPreferences } from "@/lib/storage/local-storage-repository";
-import {
-  APP_DATA_VERSION,
-  type AppData,
-  type AppPreferences,
-  type HaradaCanvasBackup,
-} from "@/models/app-data";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+import { parseAppDocument } from "@/lib/storage/parse-document";
+import { APP_DATA_VERSION, type AppData, type HaradaCanvasBackup } from "@/models/app-data";
 
 export type BackupParseResult =
   | { ok: true; backup: HaradaCanvasBackup }
   | { ok: false; reason: string };
 
 export function parseBackupJson(raw: string): BackupParseResult {
-  let parsed: unknown;
-
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return { ok: false, reason: "Backup file is not valid JSON." };
-  }
-
-  if (!isRecord(parsed)) {
-    return { ok: false, reason: "Backup file must be a JSON object." };
-  }
-
-  if (parsed.version !== APP_DATA_VERSION) {
-    return {
-      ok: false,
-      reason: `Unsupported backup version: ${String(parsed.version)}.`,
-    };
+  const parsed = parseAppDocument(raw, "backup");
+  if (!parsed.ok) {
+    return parsed;
   }
 
   if (typeof parsed.exportedAt !== "string" || Number.isNaN(Date.parse(parsed.exportedAt))) {
     return { ok: false, reason: "Backup exportedAt timestamp is invalid." };
-  }
-
-  if (!Array.isArray(parsed.squares) || !parsed.squares.every(isValidHaradaSquare)) {
-    return { ok: false, reason: "Backup squares failed validation." };
-  }
-
-  if (!isValidPreferences(parsed.preferences)) {
-    return { ok: false, reason: "Backup preferences failed validation." };
   }
 
   return {
@@ -51,8 +20,8 @@ export function parseBackupJson(raw: string): BackupParseResult {
     backup: {
       version: APP_DATA_VERSION,
       exportedAt: parsed.exportedAt,
-      squares: parsed.squares,
-      preferences: parsed.preferences,
+      squares: parsed.data.squares,
+      preferences: parsed.data.preferences,
     },
   };
 }
@@ -68,7 +37,6 @@ export function backupToAppData(backup: HaradaCanvasBackup): AppData {
 export function mergeBackupIntoAppData(
   current: AppData,
   backup: HaradaCanvasBackup,
-  options: { mergePreferences: boolean } = { mergePreferences: false },
 ): { data: AppData; importedCount: number; conflictCount: number } {
   const existingIds = new Set(current.squares.map((square) => square.id));
   let conflictCount = 0;
@@ -90,15 +58,11 @@ export function mergeBackupIntoAppData(
     };
   });
 
-  const preferences: AppPreferences = options.mergePreferences
-    ? backup.preferences
-    : current.preferences;
-
   return {
     data: {
       version: APP_DATA_VERSION,
       squares: [...current.squares, ...importedSquares],
-      preferences,
+      preferences: current.preferences,
     },
     importedCount: importedSquares.length,
     conflictCount,

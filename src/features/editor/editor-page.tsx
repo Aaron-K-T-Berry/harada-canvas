@@ -16,7 +16,6 @@ export function EditorPage() {
   const editor = useEditorSession(squareId, repository);
   const isCompact = useIsCompactViewport();
   const [mobileEditingEnabled, setMobileEditingEnabled] = useState(false);
-  const flushRef = useRef(editor.flushPendingSave);
   const undoRef = useRef(editor.undo);
   const redoRef = useRef(editor.redo);
   const [exportAnnouncement, setExportAnnouncement] = useState("");
@@ -25,10 +24,9 @@ export function EditorPage() {
   const compact = isCompact;
 
   useEffect(() => {
-    flushRef.current = editor.flushPendingSave;
     undoRef.current = editor.undo;
     redoRef.current = editor.redo;
-  }, [editor.flushPendingSave, editor.redo, editor.undo]);
+  }, [editor.redo, editor.undo]);
 
   useEffect(() => {
     if (!isCompact) {
@@ -70,12 +68,6 @@ export function EditorPage() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [readOnly]);
-
-  useEffect(() => {
-    return () => {
-      flushRef.current();
-    };
-  }, []);
 
   if (editor.status === "loading") {
     return (
@@ -158,7 +150,6 @@ export function EditorPage() {
         <EditorToolbar
           canUndo={editor.canUndo}
           canRedo={editor.canRedo}
-          canExportMarkdown
           onUndo={editor.undo}
           onRedo={editor.redo}
           onExportMarkdown={handleExportMarkdown}

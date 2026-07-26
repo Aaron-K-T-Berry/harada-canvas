@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { HashRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/app-shell";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -68,49 +68,43 @@ export default function App({ repository = createLocalStorageRepository() }: App
       : createEmptyAppData().preferences,
   );
 
-  const persistPreferences = useCallback(
-    (next: AppPreferences) => {
-      setPreferences(next);
-      try {
-        repository.setPreferences(next);
-      } catch {
-        // Invalid storage is handled by the recovery screen.
-      }
-    },
-    [repository],
-  );
+  const persistPreferences = (next: AppPreferences) => {
+    setPreferences(next);
+    try {
+      repository.setPreferences(next);
+    } catch {
+      // Invalid storage is handled by the recovery screen.
+    }
+  };
 
-  const handleThemeChange = useCallback(
-    (theme: ThemePreference) => {
-      persistPreferences({ ...preferences, theme });
-    },
-    [persistPreferences, preferences],
-  );
+  const handleThemeChange = (theme: ThemePreference) => {
+    persistPreferences({ ...preferences, theme });
+  };
 
-  const handleMarkOnboardingSeen = useCallback(() => {
+  const handleMarkOnboardingSeen = () => {
     if (preferences.onboardingSeen) {
       return;
     }
     persistPreferences({ ...preferences, onboardingSeen: true });
-  }, [persistPreferences, preferences]);
+  };
 
-  const handlePreferencesChanged = useCallback((next: AppPreferences) => {
+  const handlePreferencesChanged = (next: AppPreferences) => {
     setPreferences(next);
-  }, []);
+  };
 
-  const handleCreateSquare = useCallback(() => {
+  const handleCreateSquare = () => {
     const square = createStandardSquare();
     repository.saveSquare(square);
     if (!preferences.onboardingSeen) {
       persistPreferences({ ...preferences, onboardingSeen: true });
     }
     return square.id;
-  }, [persistPreferences, preferences, repository]);
+  };
 
-  const handleRecovered = useCallback((next: AppPreferences) => {
+  const handleRecovered = (next: AppPreferences) => {
     setPreferences(next);
     setStorageIssue(null);
-  }, []);
+  };
 
   return (
     <ErrorBoundary>

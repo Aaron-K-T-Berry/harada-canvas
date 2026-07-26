@@ -16,7 +16,7 @@ import {
 } from "@/lib/backup/backup";
 import { downloadTextFile } from "@/lib/download";
 import type { SquareRepository } from "@/lib/storage/repository";
-import type { AppPreferences } from "@/models/app-data";
+import type { AppPreferences, HaradaCanvasBackup } from "@/models/app-data";
 import { createEmptyAppData } from "@/models/app-data";
 
 type ImportMode = "merge" | "replace";
@@ -30,7 +30,7 @@ interface BackupControlsProps {
 export function BackupControls({ repository, onDataChanged, onAnnounce }: BackupControlsProps) {
   const fileInputId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pendingRaw, setPendingRaw] = useState<string | null>(null);
+  const [pendingBackup, setPendingBackup] = useState<HaradaCanvasBackup | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -67,7 +67,7 @@ export function BackupControls({ repository, onDataChanged, onAnnounce }: Backup
         return;
       }
 
-      setPendingRaw(text);
+      setPendingBackup(parsed.backup);
       setDialogOpen(true);
       setImportError(null);
     } catch {
@@ -78,13 +78,7 @@ export function BackupControls({ repository, onDataChanged, onAnnounce }: Backup
   };
 
   const applyImport = (mode: ImportMode) => {
-    if (!pendingRaw) {
-      return;
-    }
-
-    const parsed = parseBackupJson(pendingRaw);
-    if (!parsed.ok) {
-      setImportError(parsed.reason);
+    if (!pendingBackup) {
       return;
     }
 
@@ -95,14 +89,14 @@ export function BackupControls({ repository, onDataChanged, onAnnounce }: Backup
         : createEmptyAppData();
 
     if (mode === "replace") {
-      const data = backupToAppData(parsed.backup);
+      const data = backupToAppData(pendingBackup);
       repository.write(data);
       onDataChanged(data.preferences);
       onAnnounce(
         `Replaced local data with ${String(data.squares.length)} square${data.squares.length === 1 ? "" : "s"} from the backup.`,
       );
     } else {
-      const merged = mergeBackupIntoAppData(current, parsed.backup, { mergePreferences: false });
+      const merged = mergeBackupIntoAppData(current, pendingBackup);
       repository.write(merged.data);
       onDataChanged(merged.data.preferences);
       onAnnounce(
@@ -111,7 +105,7 @@ export function BackupControls({ repository, onDataChanged, onAnnounce }: Backup
     }
 
     setDialogOpen(false);
-    setPendingRaw(null);
+    setPendingBackup(null);
   };
 
   return (
@@ -154,7 +148,7 @@ export function BackupControls({ repository, onDataChanged, onAnnounce }: Backup
         onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) {
-            setPendingRaw(null);
+            setPendingBackup(null);
           }
         }}
       >

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createExampleSquare, isExampleSquareId } from "@/features/editor/domain/example-square";
 import { updateCell } from "@/features/editor/domain/grid-ops";
 import {
@@ -19,49 +19,6 @@ const AUTOSAVE_DELAY_MS = 400;
 
 type EditorStatus = "loading" | "ready" | "missing" | "example";
 
-interface EditorState {
-  status: EditorStatus;
-  square: HaradaSquare | null;
-  history: EditorHistory | null;
-  announcement: string;
-  saveError: string | null;
-}
-
-type EditorAction =
-  | { type: "load"; status: EditorStatus; square: HaradaSquare | null }
-  | { type: "apply"; square: HaradaSquare; history: EditorHistory; announcement?: string }
-  | { type: "announce"; message: string }
-  | { type: "save-error"; message: string | null };
-
-function editorReducer(state: EditorState, action: EditorAction): EditorState {
-  switch (action.type) {
-    case "load":
-      return {
-        status: action.status,
-        square: action.square,
-        history: action.square
-          ? createHistory(
-              createSnapshot(action.square.rows, action.square.columns, action.square.cells),
-            )
-          : null,
-        announcement: "",
-        saveError: null,
-      };
-    case "apply":
-      return {
-        ...state,
-        square: action.square,
-        history: action.history,
-        announcement: action.announcement ?? state.announcement,
-        saveError: null,
-      };
-    case "announce":
-      return { ...state, announcement: action.message };
-    case "save-error":
-      return { ...state, saveError: action.message };
-  }
-}
-
 function applySnapshot(
   square: HaradaSquare,
   snapshot: ReturnType<typeof createSnapshot>,
@@ -75,66 +32,82 @@ function applySnapshot(
   };
 }
 
+function historyFor(square: HaradaSquare | null): EditorHistory | null {
+  if (!square) {
+    return null;
+  }
+  return createHistory(createSnapshot(square.rows, square.columns, square.cells));
+}
+
 export function useEditorSession(squareId: string | undefined, repository: SquareRepository) {
-  const [state, dispatch] = useReducer(editorReducer, {
-    status: "loading",
-    square: null,
-    history: null,
-    announcement: "",
-    saveError: null,
-  });
-  const squareRef = useRef<HaradaSquare | null>(null);
-  const persistEnabled = state.status === "ready";
+  const [status, setStatus] = useState<EditorStatus>("loading");
+  const [square, setSquare] = useState<HaradaSquare | null>(null);
+  const [history, setHistory] = useState<EditorHistory | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const squareRef = useRef(square);
+  const historyRef = useRef(history);
+  const statusRef = useRef(status);
 
   useEffect(() => {
-    squareRef.current = state.square;
-  }, [state.square]);
+    squareRef.current = square;
+  }, [square]);
 
   useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  useEffect(() => {
+    const load = (nextStatus: EditorStatus, nextSquare: HaradaSquare | null) => {
+      setStatus(nextStatus);
+      setSquare(nextSquare);
+      setHistory(historyFor(nextSquare));
+      setAnnouncement("");
+      setSaveError(null);
+    };
+
     if (!squareId) {
-      dispatch({ type: "load", status: "missing", square: null });
+      load("missing", null);
       return;
     }
 
     if (isExampleSquareId(squareId)) {
-      dispatch({ type: "load", status: "example", square: createExampleSquare() });
+      load("example", createExampleSquare());
       return;
     }
 
     try {
       const existing = repository.getSquare(squareId);
       if (!existing) {
-        dispatch({ type: "load", status: "missing", square: null });
+        load("missing", null);
         return;
       }
-
-      dispatch({ type: "load", status: "ready", square: existing });
+      load("ready", existing);
     } catch {
-      dispatch({ type: "load", status: "missing", square: null });
+      load("missing", null);
     }
   }, [squareId, repository]);
 
-  const persistSquare = useCallback(
-    (square: HaradaSquare) => {
-      if (!persistEnabled) {
-        return;
-      }
+  const persistSquare = (next: HaradaSquare) => {
+    if (statusRef.current !== "ready") {
+      return;
+    }
 
-      try {
-        repository.saveSquare(square);
-        dispatch({ type: "save-error", message: null });
-      } catch (error) {
-        dispatch({
-          type: "save-error",
-          message: error instanceof Error ? error.message : "Unable to save square.",
-        });
-      }
-    },
-    [persistEnabled, repository],
-  );
+    try {
+      repository.saveSquare(next);
+      setSaveError(null);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Unable to save square.");
+    }
+  };
 
-  const [scheduleSave, flushSave] = useDebouncedCallback((square: HaradaSquare) => {
-    persistSquare(square);
+  const [scheduleSave, flushSave] = useDebouncedCallback((next: HaradaSquare) => {
+    persistSquare(next);
   }, AUTOSAVE_DELAY_MS);
 
   useEffect(() => {
@@ -143,97 +116,94 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
     };
   }, [flushSave]);
 
-  const commit = useCallback(
-    (nextSquare: HaradaSquare, announcement?: string) => {
-      if (!state.history) {
-        return;
-      }
-
-      const history = pushHistory(
-        state.history,
-        createSnapshot(nextSquare.rows, nextSquare.columns, nextSquare.cells),
-      );
-      dispatch({ type: "apply", square: nextSquare, history, announcement });
-      if (persistEnabled) {
-        scheduleSave(nextSquare);
-      }
-    },
-    [persistEnabled, scheduleSave, state.history],
-  );
-
-  const setCellValue = useCallback(
-    (row: number, column: number, value: string) => {
-      if (!state.square) {
-        return;
-      }
-
-      const result = updateCell(state.square, row, column, value);
-      if (result.ok) {
-        commit(result.square);
-      }
-    },
-    [commit, state.square],
-  );
-
-  const handleUndo = useCallback(() => {
-    if (!state.square || !state.history || !canUndo(state.history)) {
+  const commit = (nextSquare: HaradaSquare, nextAnnouncement?: string) => {
+    const currentHistory = historyRef.current;
+    if (!currentHistory) {
       return;
     }
 
-    const history = undo(state.history);
-    const square = applySnapshot(state.square, history.present);
-    dispatch({ type: "apply", square, history, announcement: "Undid last change." });
-    if (persistEnabled) {
-      scheduleSave(square);
+    const nextHistory = pushHistory(
+      currentHistory,
+      createSnapshot(nextSquare.rows, nextSquare.columns, nextSquare.cells),
+    );
+    setSquare(nextSquare);
+    setHistory(nextHistory);
+    if (nextAnnouncement !== undefined) {
+      setAnnouncement(nextAnnouncement);
     }
-  }, [persistEnabled, scheduleSave, state.history, state.square]);
+    setSaveError(null);
+    if (statusRef.current === "ready") {
+      scheduleSave(nextSquare);
+    }
+  };
 
-  const handleRedo = useCallback(() => {
-    if (!state.square || !state.history || !canRedo(state.history)) {
+  const setCellValue = (row: number, column: number, value: string) => {
+    const current = squareRef.current;
+    if (!current) {
       return;
     }
 
-    const history = redo(state.history);
-    const square = applySnapshot(state.square, history.present);
-    dispatch({ type: "apply", square, history, announcement: "Redid last change." });
-    if (persistEnabled) {
-      scheduleSave(square);
+    const result = updateCell(current, row, column, value);
+    if (result.ok) {
+      commit(result.square);
     }
-  }, [persistEnabled, scheduleSave, state.history, state.square]);
+  };
 
-  const flushPendingSave = useCallback(() => {
+  const handleUndo = () => {
+    const currentSquare = squareRef.current;
+    const currentHistory = historyRef.current;
+    if (!currentSquare || !currentHistory || !canUndo(currentHistory)) {
+      return;
+    }
+
+    const nextHistory = undo(currentHistory);
+    const nextSquare = applySnapshot(currentSquare, nextHistory.present);
+    setSquare(nextSquare);
+    setHistory(nextHistory);
+    setAnnouncement("Undid last change.");
+    setSaveError(null);
+    if (statusRef.current === "ready") {
+      scheduleSave(nextSquare);
+    }
+  };
+
+  const handleRedo = () => {
+    const currentSquare = squareRef.current;
+    const currentHistory = historyRef.current;
+    if (!currentSquare || !currentHistory || !canRedo(currentHistory)) {
+      return;
+    }
+
+    const nextHistory = redo(currentHistory);
+    const nextSquare = applySnapshot(currentSquare, nextHistory.present);
+    setSquare(nextSquare);
+    setHistory(nextHistory);
+    setAnnouncement("Redid last change.");
+    setSaveError(null);
+    if (statusRef.current === "ready") {
+      scheduleSave(nextSquare);
+    }
+  };
+
+  const flushPendingSave = () => {
     flushSave();
     const current = squareRef.current;
-    if (current && persistEnabled) {
+    if (current && statusRef.current === "ready") {
       persistSquare(current);
     }
-  }, [flushSave, persistEnabled, persistSquare]);
+  };
 
-  return useMemo(
-    () => ({
-      status: state.status,
-      square: state.square,
-      announcement: state.announcement,
-      saveError: state.saveError,
-      canUndo: state.history ? canUndo(state.history) : false,
-      canRedo: state.history ? canRedo(state.history) : false,
-      setCellValue,
-      undo: handleUndo,
-      redo: handleRedo,
-      flushPendingSave,
-      isReadOnly: false,
-      isExample: state.status === "example",
-    }),
-    [
-      flushPendingSave,
-      handleRedo,
-      handleUndo,
-      setCellValue,
-      state.announcement,
-      state.history,
-      state.saveError,
-      state.square,
-      state.status,
-    ],
-  );
+  return {
+    status,
+    square,
+    announcement,
+    saveError,
+    canUndo: history ? canUndo(history) : false,
+    canRedo: history ? canRedo(history) : false,
+    setCellValue,
+    undo: handleUndo,
+    redo: handleRedo,
+    flushPendingSave,
+    isExample: status === "example",
+  };
 }
