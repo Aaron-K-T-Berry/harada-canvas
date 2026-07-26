@@ -45,17 +45,17 @@
   --secondary: oklch(0.94 0.015 95);
   --secondary-foreground: oklch(0.28 0.02 250);
   --muted: oklch(0.94 0.01 95);
-  --muted-foreground: oklch(0.48 0.02 250);
+  --muted-foreground: oklch(0.42 0.02 250);
   --accent: oklch(0.93 0.02 145);
   --accent-foreground: oklch(0.28 0.03 150);
-  --destructive: oklch(0.55 0.2 25);
+  --destructive: oklch(0.5 0.2 25);
   --border: oklch(0.88 0.015 95);
   --input: oklch(0.88 0.015 95);
   --ring: oklch(0.5 0.07 240);
-  --goal-cell: oklch(0.94 0.08 95);
-  --goal-cell-foreground: oklch(0.32 0.05 85);
-  --supporting-cell: oklch(0.94 0.04 10);
-  --supporting-cell-foreground: oklch(0.35 0.06 15);
+  --goal-cell: oklch(0.93 0.09 95);
+  --goal-cell-foreground: oklch(0.28 0.05 85);
+  --supporting-cell: oklch(0.93 0.045 10);
+  --supporting-cell-foreground: oklch(0.32 0.07 15);
 }
 
 .dark {
@@ -70,17 +70,17 @@
   --secondary: oklch(0.3 0.02 250);
   --secondary-foreground: oklch(0.95 0.01 95);
   --muted: oklch(0.3 0.02 250);
-  --muted-foreground: oklch(0.72 0.02 95);
+  --muted-foreground: oklch(0.78 0.02 95);
   --accent: oklch(0.32 0.03 150);
   --accent-foreground: oklch(0.93 0.02 145);
-  --destructive: oklch(0.65 0.18 25);
+  --destructive: oklch(0.72 0.16 25);
   --border: oklch(0.34 0.02 250);
   --input: oklch(0.34 0.02 250);
-  --ring: oklch(0.72 0.05 220);
-  --goal-cell: oklch(0.38 0.07 90);
-  --goal-cell-foreground: oklch(0.94 0.04 95);
-  --supporting-cell: oklch(0.36 0.05 10);
-  --supporting-cell-foreground: oklch(0.94 0.02 10);
+  --ring: oklch(0.78 0.05 220);
+  --goal-cell: oklch(0.4 0.08 90);
+  --goal-cell-foreground: oklch(0.96 0.03 95);
+  --supporting-cell: oklch(0.38 0.055 10);
+  --supporting-cell-foreground: oklch(0.96 0.02 10);
 }
 
 @layer base {
@@ -102,5 +102,43 @@
 
   :focus-visible {
     @apply outline-none;
+  }
+
+  #main-content:focus {
+    outline: none;
+  }
+
+  .skip-link {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 60;
+    transform: translateY(-200%);
+    border-radius: 0.375rem;
+    background: var(--background);
+    color: var(--foreground);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 0 0 2px var(--ring);
+    transition: transform 0.15s ease;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    .skip-link {
+      transition: none;
+    }
+
+    .cell-surface {
+      transition: none;
+    }
   }
 }

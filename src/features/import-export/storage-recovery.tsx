@@ -59,7 +59,11 @@ export function StorageRecovery({ repository, reason, raw, onRecovered }: Storag
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-5 px-4 py-12 sm:px-6">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-5 px-4 py-12 sm:px-6"
+    >
       <h1 className="text-3xl font-semibold tracking-tight">Local data needs attention</h1>
       <p className="text-muted-foreground">
         Harada Canvas could not read the squares saved in this browser. Your existing data was left

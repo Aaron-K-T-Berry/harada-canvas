@@ -14,6 +14,7 @@ interface HaradaGridProps {
   square: HaradaSquare;
   onChangeCell: (row: number, column: number, value: string) => void;
   readOnly?: boolean;
+  compact?: boolean;
 }
 
 function cellToneClasses(role: ReturnType<typeof cellStructuralRole>) {
@@ -27,7 +28,12 @@ function cellToneClasses(role: ReturnType<typeof cellStructuralRole>) {
   }
 }
 
-export function HaradaGrid({ square, onChangeCell, readOnly = false }: HaradaGridProps) {
+export function HaradaGrid({
+  square,
+  onChangeCell,
+  readOnly = false,
+  compact = false,
+}: HaradaGridProps) {
   const labelId = useId();
   const [focused, setFocused] = useState({ row: 0, column: 0 });
   const [editing, setEditing] = useState<{ row: number; column: number } | null>(null);
@@ -151,12 +157,15 @@ export function HaradaGrid({ square, onChangeCell, readOnly = false }: HaradaGri
   return (
     <div className="flex flex-col gap-3">
       <p id={labelId} className="text-sm text-muted-foreground">
-        Use arrow keys to move between cells. Press Enter or F2 to edit. Escape cancels an edit.
+        {readOnly
+          ? "Use arrow keys or swipe to move between cells. Editing is turned off in this view."
+          : "Use arrow keys to move between cells. Press Enter or F2 to edit. Escape cancels an edit."}
       </p>
       {/* biome-ignore lint/a11y/useSemanticElements: spreadsheet-style Harada grid uses ARIA grid roles */}
       <div
         role="grid"
         aria-labelledby={labelId}
+        aria-readonly={readOnly || undefined}
         aria-rowcount={square.rows}
         aria-colcount={square.columns}
         className="overflow-auto rounded-lg border border-border"
@@ -164,7 +173,7 @@ export function HaradaGrid({ square, onChangeCell, readOnly = false }: HaradaGri
         <div
           className="inline-grid min-w-full"
           style={{
-            gridTemplateColumns: `repeat(${square.columns}, minmax(4.5rem, 1fr))`,
+            gridTemplateColumns: `repeat(${square.columns}, minmax(${compact ? "3.25rem" : "4.5rem"}, 1fr))`,
           }}
         >
           {Array.from({ length: square.rows * square.columns }, (_, index) => {
@@ -200,7 +209,7 @@ export function HaradaGrid({ square, onChangeCell, readOnly = false }: HaradaGri
                   tabIndex={0}
                   aria-colindex={columnIndex + 1}
                   aria-rowindex={rowIndex + 1}
-                  className={cn("min-h-16 p-1", borderClasses)}
+                  className={cn("p-1", compact ? "min-h-12" : "min-h-16", borderClasses)}
                 >
                   <label className="sr-only" htmlFor={`cell-editor-${rowIndex}-${columnIndex}`}>
                     Edit cell row {rowIndex + 1}, column {columnIndex + 1}
@@ -212,7 +221,10 @@ export function HaradaGrid({ square, onChangeCell, readOnly = false }: HaradaGri
                     onChange={(event) => setDraft(event.target.value)}
                     onBlur={commitEdit}
                     onKeyDown={handleEditorKeyDown}
-                    className="h-full min-h-14 w-full resize-none rounded-sm border border-ring bg-background p-2 text-center text-sm focus-visible:outline-none"
+                    className={cn(
+                      "h-full w-full resize-none rounded-sm border border-ring bg-background p-2 text-center text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      compact ? "min-h-10" : "min-h-14",
+                    )}
                   />
                 </div>
               );
@@ -236,6 +248,7 @@ export function HaradaGrid({ square, onChangeCell, readOnly = false }: HaradaGri
                 tabIndex={isFocused ? 0 : -1}
                 aria-colindex={columnIndex + 1}
                 aria-rowindex={rowIndex + 1}
+                aria-readonly={readOnly || undefined}
                 aria-label={
                   value
                     ? `Row ${rowIndex + 1}, column ${columnIndex + 1}: ${value}`
@@ -248,10 +261,12 @@ export function HaradaGrid({ square, onChangeCell, readOnly = false }: HaradaGri
                 onDoubleClick={() => beginEdit(rowIndex, columnIndex)}
                 onKeyDown={(event) => handleCellKeyDown(event, rowIndex, columnIndex)}
                 className={cn(
-                  "flex min-h-16 w-full items-center justify-center whitespace-pre-wrap break-words p-2 text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                  "flex w-full items-center justify-center whitespace-pre-wrap break-words p-2 text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                  compact ? "min-h-12 text-xs" : "min-h-16",
                   borderClasses,
                   !value && structuralRole === "action" && "text-muted-foreground",
                   !value && structuralRole !== "action" && "opacity-70",
+                  readOnly && "cursor-default",
                 )}
               >
                 {value || guidance || ""}

@@ -41,7 +41,8 @@ export function SquareList({
               Updated {formatSquareTimestamp(square.updatedAt)}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <fieldset className="m-0 flex min-w-0 flex-wrap gap-2 border-0 p-0">
+            <legend className="sr-only">Actions for {square.title}</legend>
             <Button asChild size="sm" variant="outline">
               <Link to={`/square/${square.id}`}>Open</Link>
             </Button>
@@ -53,7 +54,7 @@ export function SquareList({
               aria-label={`Rename ${square.title}`}
             >
               <Pencil />
-              Rename
+              <span className="hidden sm:inline">Rename</span>
             </Button>
             <Button
               type="button"
@@ -63,7 +64,7 @@ export function SquareList({
               aria-label={`Duplicate ${square.title}`}
             >
               <Copy />
-              Duplicate
+              <span className="hidden sm:inline">Duplicate</span>
             </Button>
             <Button
               type="button"
@@ -73,9 +74,9 @@ export function SquareList({
               aria-label={`Delete ${square.title}`}
             >
               <Trash2 />
-              Delete
+              <span className="hidden sm:inline">Delete</span>
             </Button>
-          </div>
+          </fieldset>
         </li>
       ))}
     </ul>

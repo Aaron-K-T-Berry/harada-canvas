@@ -4,7 +4,7 @@ Harada Canvas is an open-source web app for building and managing [Harada Square
 
 ## Status
 
-Portability milestone: Markdown export, versioned JSON backup import/export, and local-storage recovery guidance are available. Accessibility polish and GitHub Pages deployment land next.
+Accessibility and responsive polish: skip links, live regions, contrast tweaks, reduced-motion support, and a simplified mobile viewing mode are in place. GitHub Pages deployment lands next.
 
 ## Privacy
 
@@ -14,7 +14,17 @@ Portability milestone: Markdown export, versioned JSON backup import/export, and
 
 ## Supported browsers
 
-Latest two major versions of Chrome, Edge, Firefox, and Safari.
+Latest two major versions of Chrome, Edge, Firefox, and Safari on desktop. Phones and tablets are supported primarily for viewing saved squares; full editing works best on a desktop browser.
+
+## Accessibility
+
+- Skip link to main content
+- Keyboard grid navigation (arrows, Tab, Enter/F2, Escape)
+- Visible focus rings and screen-reader labels on controls
+- Live announcements for saves, imports, and management actions
+- Light and dark themes tuned for WCAG AA contrast
+- `prefers-reduced-motion` respected for transitions
+- Compact viewports default to a simplified viewing mode with optional editing
 
 ## Requirements
 

@@ -1,5 +1,6 @@
 import { Moon, Sun } from "lucide-react";
 import { Link, Outlet } from "react-router-dom";
+import { SkipLink } from "@/components/skip-link";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 
@@ -8,6 +9,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SkipLink />
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link
