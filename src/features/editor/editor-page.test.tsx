@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import App from "@/App";
@@ -72,28 +72,20 @@ describe("editor workflows", () => {
     expect(getCell(/Row 1, column 1: empty/i)).toBeInTheDocument();
   });
 
-  it("warns before removing a populated row", async () => {
-    const user = userEvent.setup();
+  it("keeps a fixed 9×9 grid without resize controls", async () => {
     const repository = createLocalStorageRepository(createMemoryStorage());
-    const square = createStandardSquare({ id: "warn-me", title: "Warn me" });
-    const cells = square.cells.map((row) => [...row]);
-    const lastRow = cells[8];
-    if (lastRow) {
-      lastRow[0] = "keep";
-    }
-    repository.saveSquare({ ...square, cells });
+    const square = createStandardSquare({ id: "fixed", title: "Fixed" });
+    repository.saveSquare(square);
 
-    window.location.hash = "#/square/warn-me";
+    window.location.hash = "#/square/fixed";
     render(<App repository={repository} />);
 
-    expect(await screen.findByRole("heading", { name: "Warn me" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Remove row" }));
-
-    const dialog = screen.getByRole("alertdialog");
-    expect(within(dialog).getByText(/contains text/i)).toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Remove row" }));
-
-    expect(screen.getByText("8 × 9")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Fixed" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add row" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove row" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add column" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove column" })).not.toBeInTheDocument();
+    expect(screen.queryByText("9 × 9")).not.toBeInTheDocument();
   });
 
   it("moves focus with arrow keys", async () => {

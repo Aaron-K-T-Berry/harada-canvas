@@ -7,12 +7,7 @@ import {
   DEFAULT_PREFERENCES,
   type ThemePreference,
 } from "@/models/app-data";
-import {
-  type HaradaSquare,
-  isValidGridSize,
-  MAX_GRID_SIZE,
-  MIN_GRID_SIZE,
-} from "@/models/harada-square";
+import { type HaradaSquare, isValidGridSize } from "@/models/harada-square";
 
 export const STORAGE_KEY = "harada-canvas:v1";
 
@@ -196,4 +191,4 @@ export function createLocalStorageRepository(
   };
 }
 
-export { DEFAULT_PREFERENCES, MAX_GRID_SIZE, MIN_GRID_SIZE };
+export { DEFAULT_PREFERENCES };

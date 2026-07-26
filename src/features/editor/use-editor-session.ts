@@ -1,12 +1,6 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { createExampleSquare, isExampleSquareId } from "@/features/editor/domain/example-square";
-import {
-  addColumn,
-  addRow,
-  removeColumn,
-  removeRow,
-  updateCell,
-} from "@/features/editor/domain/grid-ops";
+import { updateCell } from "@/features/editor/domain/grid-ops";
 import {
   canRedo,
   canUndo,
@@ -89,10 +83,6 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
     announcement: "",
     saveError: null,
   });
-  const [pendingRemoval, setPendingRemoval] = useState<null | {
-    kind: "row" | "column";
-    index: number;
-  }>(null);
   const squareRef = useRef<HaradaSquare | null>(null);
   const persistEnabled = state.status === "ready";
 
@@ -211,97 +201,6 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
     }
   }, [persistEnabled, scheduleSave, state.history, state.square]);
 
-  const requestRemoveRow = useCallback(
-    (index?: number) => {
-      if (!state.square) {
-        return;
-      }
-      const rowIndex = index ?? state.square.rows - 1;
-      const preview = removeRow(state.square, rowIndex);
-      if (!preview.ok) {
-        dispatch({ type: "announce", message: preview.reason });
-        return;
-      }
-      if (preview.removedText) {
-        setPendingRemoval({ kind: "row", index: rowIndex });
-        return;
-      }
-      commit(preview.square, "Removed row.");
-    },
-    [commit, state.square],
-  );
-
-  const requestRemoveColumn = useCallback(
-    (index?: number) => {
-      if (!state.square) {
-        return;
-      }
-      const columnIndex = index ?? state.square.columns - 1;
-      const preview = removeColumn(state.square, columnIndex);
-      if (!preview.ok) {
-        dispatch({ type: "announce", message: preview.reason });
-        return;
-      }
-      if (preview.removedText) {
-        setPendingRemoval({ kind: "column", index: columnIndex });
-        return;
-      }
-      commit(preview.square, "Removed column.");
-    },
-    [commit, state.square],
-  );
-
-  const confirmPendingRemoval = useCallback(() => {
-    if (!state.square || !pendingRemoval) {
-      return;
-    }
-
-    const result =
-      pendingRemoval.kind === "row"
-        ? removeRow(state.square, pendingRemoval.index)
-        : removeColumn(state.square, pendingRemoval.index);
-
-    setPendingRemoval(null);
-
-    if (!result.ok) {
-      dispatch({ type: "announce", message: result.reason });
-      return;
-    }
-
-    commit(
-      result.square,
-      pendingRemoval.kind === "row" ? "Removed row with text." : "Removed column with text.",
-    );
-  }, [commit, pendingRemoval, state.square]);
-
-  const cancelPendingRemoval = useCallback(() => {
-    setPendingRemoval(null);
-  }, []);
-
-  const handleAddRow = useCallback(() => {
-    if (!state.square) {
-      return;
-    }
-    const result = addRow(state.square);
-    if (!result.ok) {
-      dispatch({ type: "announce", message: result.reason });
-      return;
-    }
-    commit(result.square, "Added row.");
-  }, [commit, state.square]);
-
-  const handleAddColumn = useCallback(() => {
-    if (!state.square) {
-      return;
-    }
-    const result = addColumn(state.square);
-    if (!result.ok) {
-      dispatch({ type: "announce", message: result.reason });
-      return;
-    }
-    commit(result.square, "Added column.");
-  }, [commit, state.square]);
-
   const flushPendingSave = useCallback(() => {
     flushSave();
     const current = squareRef.current;
@@ -318,31 +217,17 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
       saveError: state.saveError,
       canUndo: state.history ? canUndo(state.history) : false,
       canRedo: state.history ? canRedo(state.history) : false,
-      pendingRemoval,
       setCellValue,
       undo: handleUndo,
       redo: handleRedo,
-      addRow: handleAddRow,
-      addColumn: handleAddColumn,
-      removeRow: requestRemoveRow,
-      removeColumn: requestRemoveColumn,
-      confirmPendingRemoval,
-      cancelPendingRemoval,
       flushPendingSave,
       isReadOnly: false,
       isExample: state.status === "example",
     }),
     [
-      cancelPendingRemoval,
-      confirmPendingRemoval,
       flushPendingSave,
-      handleAddColumn,
-      handleAddRow,
       handleRedo,
       handleUndo,
-      pendingRemoval,
-      requestRemoveColumn,
-      requestRemoveRow,
       setCellValue,
       state.announcement,
       state.history,

@@ -24,8 +24,8 @@ export function DashboardPage({ onboardingSeen, onCreateSquare }: DashboardPageP
           <h2 className="text-xl font-medium">Welcome to Harada Canvas</h2>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             The Harada method centers a long-term goal, then surrounds it with supporting goals and
-            daily practices on a 9×9 grid. Start from the standard template, then reshape the grid
-            when your planning process needs it.
+            daily practices on a fixed 9×9 grid. Start from the standard template and fill in your
+            goals and actions.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button type="button" onClick={onCreateSquare}>

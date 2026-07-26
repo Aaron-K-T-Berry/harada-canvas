@@ -1,15 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { EditorToolbar } from "@/features/editor/editor-toolbar";
 import { HaradaGrid } from "@/features/editor/harada-grid";
@@ -117,16 +107,10 @@ export function EditorPage() {
       </div>
 
       <EditorToolbar
-        rows={square.rows}
-        columns={square.columns}
         canUndo={editor.canUndo}
         canRedo={editor.canRedo}
         onUndo={editor.undo}
         onRedo={editor.redo}
-        onAddRow={editor.addRow}
-        onAddColumn={editor.addColumn}
-        onRemoveRow={() => editor.removeRow()}
-        onRemoveColumn={() => editor.removeColumn()}
       />
 
       <HaradaGrid square={square} onChangeCell={editor.setCellValue} />
@@ -140,33 +124,6 @@ export function EditorPage() {
           </p>
         ) : null}
       </div>
-
-      <AlertDialog
-        open={editor.pendingRemoval !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            editor.cancelPendingRemoval();
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Remove {editor.pendingRemoval?.kind === "row" ? "row" : "column"} with text?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This {editor.pendingRemoval?.kind} contains text. Removing it permanently deletes that
-              content from the square.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={editor.cancelPendingRemoval}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={editor.confirmPendingRemoval}>
-              Remove {editor.pendingRemoval?.kind}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </main>
   );
 }
