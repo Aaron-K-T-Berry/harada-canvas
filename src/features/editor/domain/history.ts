@@ -20,7 +20,7 @@ export function createSnapshot(rows: number, columns: number, cells: string[][])
   };
 }
 
-export function snapshotsEqual(a: EditorSnapshot, b: EditorSnapshot): boolean {
+function snapshotsEqual(a: EditorSnapshot, b: EditorSnapshot): boolean {
   if (a.rows !== b.rows || a.columns !== b.columns) {
     return false;
   }

@@ -36,7 +36,7 @@ export function isValidGridSize(value: number): boolean {
   return value === STANDARD_GRID_SIZE;
 }
 
-export function isValidStandardGrid(rows: number, columns: number, cells: string[][]): boolean {
+function isValidStandardGrid(rows: number, columns: number, cells: string[][]): boolean {
   return (
     isValidGridSize(rows) &&
     isValidGridSize(columns) &&

@@ -6,7 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!dist", "!coverage", "!node_modules", "!public/*.svg"]
+    "includes": [
+      "**",
+      "!dist",
+      "!coverage",
+      "!node_modules",
+      "!public/*.svg",
+      "!.fallow",
+      "!.fallowrc.json"
+    ]
   },
   "formatter": {
     "enabled": true,

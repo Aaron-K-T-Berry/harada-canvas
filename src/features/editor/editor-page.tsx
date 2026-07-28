@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { RenameSquareDialog } from "@/features/dashboard/rename-square-dialog";
@@ -7,9 +7,94 @@ import { HaradaGrid } from "@/features/editor/harada-grid";
 import { MobileEditorBanner } from "@/features/editor/mobile-editor-banner";
 import { useEditorSession } from "@/features/editor/use-editor-session";
 import { useIsCompactViewport } from "@/hooks/use-media-query";
+import { useUndoRedoShortcuts } from "@/hooks/use-undo-redo-shortcuts";
 import { downloadTextFile } from "@/lib/download";
 import { markdownFilename, squareToMarkdown } from "@/lib/markdown/export-markdown";
 import { useRepository } from "@/lib/storage/repository-context";
+import type { HaradaSquare } from "@/models/harada-square";
+
+function editorSubtitle(isExample: boolean, readOnly: boolean): string {
+  if (isExample) {
+    return "Example square — edits stay in this session and are not saved.";
+  }
+  if (readOnly) {
+    return "Viewing mode for smaller screens.";
+  }
+  return "Changes save automatically to this browser.";
+}
+
+function EditorPageActions({
+  readOnly,
+  canRename,
+  squareTitle,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+  onExportMarkdown,
+  onRename,
+}: {
+  readOnly: boolean;
+  canRename: boolean;
+  squareTitle: string;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  onExportMarkdown: () => void;
+  onRename: () => void;
+}) {
+  if (readOnly) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={onExportMarkdown}>
+          Export Markdown
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <EditorToolbar
+      canUndo={canUndo}
+      canRedo={canRedo}
+      onUndo={onUndo}
+      onRedo={onRedo}
+      onExportMarkdown={onExportMarkdown}
+      onRename={canRename ? onRename : undefined}
+      renameLabel={canRename ? `Rename ${squareTitle}` : undefined}
+    />
+  );
+}
+
+function EditorStatusRegion({
+  announcement,
+  exportAnnouncement,
+  saveError,
+  isExample,
+}: {
+  announcement: string;
+  exportAnnouncement: string;
+  saveError: string | null;
+  isExample: boolean;
+}) {
+  return (
+    <div
+      className="space-y-1 text-sm"
+      aria-live={saveError ? "assertive" : "polite"}
+      aria-atomic="true"
+    >
+      {announcement ? <p>{announcement}</p> : null}
+      {exportAnnouncement ? <p>{exportAnnouncement}</p> : null}
+      {saveError ? <p className="text-destructive">{saveError}</p> : null}
+      {isExample ? (
+        <p className="text-muted-foreground">
+          Create your own square from the dashboard to keep work after reload.
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export function EditorPage() {
   const { squareId } = useParams();
@@ -18,59 +103,23 @@ export function EditorPage() {
   const isCompact = useIsCompactViewport();
   const [mobileEditingEnabled, setMobileEditingEnabled] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
-  const undoRef = useRef(editor.undo);
-  const redoRef = useRef(editor.redo);
   const [exportAnnouncement, setExportAnnouncement] = useState("");
 
   const readOnly = isCompact && !mobileEditingEnabled;
   const compact = isCompact;
   const canRename = !readOnly && !editor.isExample;
 
-  useEffect(() => {
-    undoRef.current = editor.undo;
-    redoRef.current = editor.redo;
-  }, [editor.redo, editor.undo]);
+  useUndoRedoShortcuts({
+    enabled: !readOnly,
+    undo: editor.undo,
+    redo: editor.redo,
+  });
 
   useEffect(() => {
     if (!isCompact) {
       setMobileEditingEnabled(false);
     }
   }, [isCompact]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (readOnly) {
-        return;
-      }
-
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.tagName === "TEXTAREA" || target.tagName === "INPUT" || target.isContentEditable)
-      ) {
-        return;
-      }
-
-      const modifier = event.metaKey || event.ctrlKey;
-      if (!modifier) {
-        return;
-      }
-
-      if (event.key.toLowerCase() === "z" && !event.shiftKey) {
-        event.preventDefault();
-        undoRef.current();
-        return;
-      }
-
-      if ((event.key.toLowerCase() === "z" && event.shiftKey) || event.key.toLowerCase() === "y") {
-        event.preventDefault();
-        redoRef.current();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [readOnly]);
 
   if (editor.status === "loading") {
     return (
@@ -100,7 +149,7 @@ export function EditorPage() {
     );
   }
 
-  const square = editor.square;
+  const square: HaradaSquare = editor.square;
 
   const handleExportMarkdown = () => {
     editor.flushPendingSave();
@@ -121,13 +170,7 @@ export function EditorPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{square.title}</h1>
-          <p className="mt-1 text-muted-foreground">
-            {editor.isExample
-              ? "Example square — edits stay in this session and are not saved."
-              : readOnly
-                ? "Viewing mode for smaller screens."
-                : "Changes save automatically to this browser."}
-          </p>
+          <p className="mt-1 text-muted-foreground">{editorSubtitle(editor.isExample, readOnly)}</p>
         </div>
         <Button asChild variant="outline">
           <Link
@@ -149,23 +192,17 @@ export function EditorPage() {
         />
       ) : null}
 
-      {!readOnly ? (
-        <EditorToolbar
-          canUndo={editor.canUndo}
-          canRedo={editor.canRedo}
-          onUndo={editor.undo}
-          onRedo={editor.redo}
-          onExportMarkdown={handleExportMarkdown}
-          onRename={canRename ? () => setRenameOpen(true) : undefined}
-          renameLabel={canRename ? `Rename ${square.title}` : undefined}
-        />
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={handleExportMarkdown}>
-            Export Markdown
-          </Button>
-        </div>
-      )}
+      <EditorPageActions
+        readOnly={readOnly}
+        canRename={canRename}
+        squareTitle={square.title}
+        canUndo={editor.canUndo}
+        canRedo={editor.canRedo}
+        onUndo={editor.undo}
+        onRedo={editor.redo}
+        onExportMarkdown={handleExportMarkdown}
+        onRename={() => setRenameOpen(true)}
+      />
 
       <HaradaGrid
         square={square}
@@ -174,20 +211,12 @@ export function EditorPage() {
         compact={compact}
       />
 
-      <div
-        className="space-y-1 text-sm"
-        aria-live={editor.saveError ? "assertive" : "polite"}
-        aria-atomic="true"
-      >
-        {editor.announcement ? <p>{editor.announcement}</p> : null}
-        {exportAnnouncement ? <p>{exportAnnouncement}</p> : null}
-        {editor.saveError ? <p className="text-destructive">{editor.saveError}</p> : null}
-        {editor.isExample ? (
-          <p className="text-muted-foreground">
-            Create your own square from the dashboard to keep work after reload.
-          </p>
-        ) : null}
-      </div>
+      <EditorStatusRegion
+        announcement={editor.announcement}
+        exportAnnouncement={exportAnnouncement}
+        saveError={editor.saveError}
+        isExample={editor.isExample}
+      />
 
       <RenameSquareDialog
         open={renameOpen}

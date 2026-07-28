@@ -8,8 +8,6 @@ import { type AppData, createEmptyAppData } from "@/models/app-data";
 
 export const STORAGE_KEY = "harada-canvas:v1";
 
-export { isValidHaradaSquare, isValidPreferences } from "@/lib/storage/parse-document";
-
 export function parseAppData(
   raw: string,
 ): { ok: true; data: AppData } | { ok: false; reason: string } {
