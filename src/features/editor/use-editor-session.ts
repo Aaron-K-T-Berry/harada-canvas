@@ -174,36 +174,21 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
     }
   };
 
-  const handleUndo = () => {
+  const applyHistoryMove = (direction: "undo" | "redo") => {
     const currentSquare = squareRef.current;
     const currentHistory = historyRef.current;
-    if (!currentSquare || !currentHistory || !canUndo(currentHistory)) {
+    if (!currentSquare || !currentHistory) {
+      return;
+    }
+    if (direction === "undo" ? !canUndo(currentHistory) : !canRedo(currentHistory)) {
       return;
     }
 
-    const nextHistory = undo(currentHistory);
+    const nextHistory = direction === "undo" ? undo(currentHistory) : redo(currentHistory);
     const nextSquare = applySnapshot(currentSquare, nextHistory.present);
     setSquare(nextSquare);
     setHistory(nextHistory);
-    setAnnouncement("Undid last change.");
-    setSaveError(null);
-    if (statusRef.current === "ready") {
-      scheduleSave(nextSquare);
-    }
-  };
-
-  const handleRedo = () => {
-    const currentSquare = squareRef.current;
-    const currentHistory = historyRef.current;
-    if (!currentSquare || !currentHistory || !canRedo(currentHistory)) {
-      return;
-    }
-
-    const nextHistory = redo(currentHistory);
-    const nextSquare = applySnapshot(currentSquare, nextHistory.present);
-    setSquare(nextSquare);
-    setHistory(nextHistory);
-    setAnnouncement("Redid last change.");
+    setAnnouncement(direction === "undo" ? "Undid last change." : "Redid last change.");
     setSaveError(null);
     if (statusRef.current === "ready") {
       scheduleSave(nextSquare);
@@ -227,8 +212,8 @@ export function useEditorSession(squareId: string | undefined, repository: Squar
     canRedo: history ? canRedo(history) : false,
     setCellValue,
     renameTitle,
-    undo: handleUndo,
-    redo: handleRedo,
+    undo: () => applyHistoryMove("undo"),
+    redo: () => applyHistoryMove("redo"),
     flushPendingSave,
     isExample: status === "example",
   };

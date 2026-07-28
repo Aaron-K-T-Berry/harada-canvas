@@ -1,10 +1,31 @@
 import { useEffect, useRef } from "react";
 
+export type UndoRedoAction = "undo" | "redo";
+
 function isEditableKeyboardTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
     (target.tagName === "TEXTAREA" || target.tagName === "INPUT" || target.isContentEditable)
   );
+}
+
+/** Resolve a keydown into undo/redo when Cmd/Ctrl is held. */
+export function resolveUndoRedoAction(
+  key: string,
+  mods: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean },
+): UndoRedoAction | null {
+  if (!mods.metaKey && !mods.ctrlKey) {
+    return null;
+  }
+
+  const lower = key.toLowerCase();
+  if (lower === "z" && !mods.shiftKey) {
+    return "undo";
+  }
+  if ((lower === "z" && mods.shiftKey) || lower === "y") {
+    return "redo";
+  }
+  return null;
 }
 
 interface UseUndoRedoShortcutsOptions {
@@ -33,19 +54,19 @@ export function useUndoRedoShortcuts({ enabled, undo, redo }: UseUndoRedoShortcu
         return;
       }
 
-      const modifier = event.metaKey || event.ctrlKey;
-      if (!modifier) {
+      const action = resolveUndoRedoAction(event.key, {
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+      });
+      if (!action) {
         return;
       }
 
-      if (event.key.toLowerCase() === "z" && !event.shiftKey) {
-        event.preventDefault();
+      event.preventDefault();
+      if (action === "undo") {
         undoRef.current();
-        return;
-      }
-
-      if ((event.key.toLowerCase() === "z" && event.shiftKey) || event.key.toLowerCase() === "y") {
-        event.preventDefault();
+      } else {
         redoRef.current();
       }
     };
