@@ -1,5 +1,5 @@
 import { Moon, Sun } from "lucide-react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router";
 import { SkipLink } from "@/components/skip-link";
 import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
