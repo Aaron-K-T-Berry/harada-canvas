@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/ibm-plex-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.23
         version: 1.1.23(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -287,6 +290,9 @@ packages:
     resolution: {integrity: sha512-eKTBjBQONmSok06JyPYdlOyfmaHIIKMUZvoeMyQfUYIGo1wrfE6a3vY473yLKLSBInSZeyGbPya5yfVxSngizQ==}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/ibm-plex-sans@5.3.0':
+    resolution: {integrity: sha512-CbE4CbbEEZJX860XyUiRpsksXIQR8Rp2XDva2VO53NJox9tVNtusrysd2x5YkUEY3ErQ66W1IiiQL8/wihhw5w==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1738,6 +1744,8 @@ snapshots:
 
   '@fallow-cli/win32-x64-msvc@3.10.0':
     optional: true
+
+  '@fontsource/ibm-plex-sans@5.3.0': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

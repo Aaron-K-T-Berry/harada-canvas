@@ -30,6 +30,12 @@ export function AppShell() {
         </div>
       </header>
       <Outlet />
+      <footer className="border-t border-border">
+        <p className="mx-auto max-w-6xl px-4 py-3 text-xs text-muted-foreground sm:px-6">
+          Independent, unofficial tool; not affiliated with Takashi Harada or official Harada Method
+          programs.
+        </p>
+      </footer>
     </div>
   );
 }

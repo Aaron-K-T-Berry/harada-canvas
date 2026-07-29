@@ -2,6 +2,8 @@
 
 Harada Canvas is an open-source web app for building and managing [Harada Squares](https://en.wikipedia.org/wiki/Harada_Method) for goal planning. It runs entirely in the browser, stores data locally, and is designed for GitHub Pages hosting.
 
+Independent, unofficial tool; not affiliated with Takashi Harada or official Harada Method programs.
+
 ## Status
 
 v1 is complete: editor, dashboard, portability, accessibility polish, and GitHub Pages deploy workflows are in place.
@@ -11,6 +13,7 @@ v1 is complete: editor, dashboard, portability, accessibility polish, and GitHub
 - Square contents stay in this browser via `localStorage`.
 - Clearing site data for this origin permanently removes saved squares.
 - Export a JSON backup before clearing browser storage or switching devices.
+- Fonts (IBM Plex Sans) are self-hosted with the app; page loads do not contact Google for typography.
 
 ## Supported browsers
 
