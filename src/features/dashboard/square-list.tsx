@@ -1,5 +1,5 @@
 import { Copy, Pencil, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { formatSquareTimestamp } from "@/features/dashboard/domain/square-list";
 import type { HaradaSquare } from "@/models/harada-square";
