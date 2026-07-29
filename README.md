@@ -76,9 +76,9 @@ Production and pull-request previews are published from the `gh-pages` branch.
 | Surface | Trigger | URL shape |
 | --- | --- | --- |
 | Production | Push to `master` | `https://<owner>.github.io/harada-canvas/` |
-| PR preview | Open/sync PR (same-repo only) | `https://<owner>.github.io/harada-canvas/pr-preview/pr-<n>/` |
+| PR preview | Open/sync PR (same-repo, owner only) | `https://<owner>.github.io/harada-canvas/pr-preview/pr-<n>/` |
 
-Preview directories are removed when the pull request closes. Fork pull requests still get CI checks, but they do not receive write-capable preview deploys.
+Preview directories are removed when the pull request closes. Only same-repo pull requests opened by the repository owner receive preview deploys; fork PRs, Dependabot, and other contributors still get CI checks only.
 
 ### One-time repository setup
 
@@ -97,7 +97,7 @@ Workflows:
 1. Create a branch from `master`.
 2. Make focused changes with tests for domain and storage behavior.
 3. Run `pnpm check`, `pnpm typecheck`, `pnpm test`, and `pnpm build` before opening a pull request.
-4. Same-repo pull requests get an automatic Pages preview comment; fork PRs rely on CI only.
+4. Same-repo pull requests opened by the repository owner get an automatic Pages preview comment; everyone else relies on CI only.
 5. Keep square contents offline; do not add networked persistence.
 
 ## License

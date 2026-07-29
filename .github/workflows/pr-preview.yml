@@ -20,7 +20,10 @@ jobs:
   preview:
     name: Deploy PR preview
     # Previews need write access to gh-pages; fork PRs only get a read-only token.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Owner-only so public same-repo PRs (Dependabot, collaborators) cannot deploy.
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login == github.repository_owner
     runs-on: ubuntu-latest
 
     steps:
