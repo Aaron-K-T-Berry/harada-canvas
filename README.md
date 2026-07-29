@@ -4,9 +4,11 @@ Harada Canvas is an open-source web app for building and managing [Harada Square
 
 Independent, unofficial tool; not affiliated with Takashi Harada or official Harada Method programs.
 
-## Status
+![Screenshot](./.docs/screenshot.png)
 
-v1 is complete: editor, dashboard, portability, accessibility polish, and GitHub Pages deploy workflows are in place.
+## Supported browsers
+
+Latest two major versions of Chrome, Edge, Firefox, and Safari on desktop. Phones and tablets are supported primarily for viewing saved squares; full editing works best on a desktop browser.
 
 ## Privacy
 
@@ -14,10 +16,6 @@ v1 is complete: editor, dashboard, portability, accessibility polish, and GitHub
 - Clearing site data for this origin permanently removes saved squares.
 - Export a JSON backup before clearing browser storage or switching devices.
 - Fonts (IBM Plex Sans) are self-hosted with the app; page loads do not contact Google for typography.
-
-## Supported browsers
-
-Latest two major versions of Chrome, Edge, Firefox, and Safari on desktop. Phones and tablets are supported primarily for viewing saved squares; full editing works best on a desktop browser.
 
 ## Accessibility
 
